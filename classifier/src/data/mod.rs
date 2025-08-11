@@ -1,4 +1,10 @@
+use csv;
+use std::error::Error;
+use std::fs::File;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 
+#[derive(Clone)]
 pub struct Flower{
     pub comprimento_sepala: f64,
     pub largura_petala: f64,
@@ -69,3 +75,34 @@ pub fn carregar_dataset() -> Vec<Flower> {
         },
     ]
 }
+
+
+pub fn carregar_dataset_iris() -> Result<Vec<Flower>, Box<dyn Error>>  {
+    let mut reader = csv::Reader::from_path("C:/Users/leohe/OneDrive/Documentos/IA_Rust/classifier/data/iris.csv")?;
+
+    let mut dataset: Vec<Flower> = Vec::new();
+
+    for results in reader.records(){
+        let record = results?;
+
+        let comprimento_sepala: f64 = record[0].parse()?;
+        let largura_petala: f64 = record[1].parse()?;
+        let especie: String = record[4].to_string();
+
+        let nova_flor = Flower{
+            comprimento_sepala,
+            largura_petala,
+            especie,
+        };
+
+        dataset.push(nova_flor);
+    }
+
+    Ok(dataset)
+
+}
+
+pub fn embaralhar_dataset(dataset: &mut Vec<Flower>) {
+    dataset.shuffle(&mut thread_rng());
+}
+

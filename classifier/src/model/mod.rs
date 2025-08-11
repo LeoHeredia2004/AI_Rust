@@ -6,11 +6,11 @@ pub fn calcular_distancia(flor1: &Flower, flor2: &Flower) -> f64{
     distance.sqrt()
 }
 
-pub fn encontrar_k_vizinhos<'a>(nov_flor: &Flower, dataset: &'a Vec<Flower>, k: usize) -> Vec<&'a Flower> {
+pub fn encontrar_k_vizinhos<'a>(nova_flor: &Flower, dataset: &'a Vec<Flower>, k: usize) -> Vec<&'a Flower> {
     let mut distancias: Vec<(f64, &'a Flower)> = Vec::new();
 
     for flor_treino in dataset{
-        let dist = calcular_distancia(nov_flor, flor_treino);
+        let dist = calcular_distancia(nova_flor, flor_treino);
         distancias.push((dist, flor_treino));
     }
 
@@ -37,3 +37,43 @@ pub fn votacao(vizinhos: &[&Flower]) -> String{
     especie_vencedora.to_string()
 }
 
+pub fn avaliar_modelo(dataset: &Vec<Flower>, k: usize) -> f64{
+    let mut acuracias: Vec<f64> = Vec::new();
+    let mut tamanho_dobra = dataset.len() / k;
+
+    for i in 0..k{
+        let inicio_teste = i * tamanho_dobra;
+        let fim_teste = inicio_teste + tamanho_dobra;
+
+        let teste_set = &dataset[inicio_teste..fim_teste];
+
+        let mut treino_set = Vec::new();
+        // Pegar a parte do dataset antes da dobra de teste
+        treino_set.extend_from_slice(&dataset[0..inicio_teste]);
+        // Pegar a parte do dataset depois da dobra de teste
+        treino_set.extend_from_slice(&dataset[fim_teste..]);
+
+
+        let mut acertos = 0;
+        let mut testados = 0;
+
+        for flor_teste in teste_set {
+            testados += 1;
+
+            let k_vizinhos = 3;
+
+            let vizinhos = encontrar_k_vizinhos(flor_teste, &treino_set, k_vizinhos);
+
+            let especie_prevista = votacao(&vizinhos);
+
+            if especie_prevista == flor_teste.especie {
+                acertos += 1;
+            }
+        }
+        let acuracia_dobra = acertos as f64 / testados as f64;
+        acuracias.push(acuracia_dobra);
+    }
+
+    let soma_acuracias: f64 = acuracias.iter().sum();
+    soma_acuracias / acuracias.len() as f64
+}
